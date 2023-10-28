@@ -234,7 +234,29 @@ class BigCard extends StatelessWidget {
   }
 }
 
-class FavoritesPage extends StatelessWidget {
+class FavoritesPage extends StatefulWidget {
+  @override
+  _FavoritesPageState createState() => _FavoritesPageState();
+}
+
+class _FavoritesPageState extends State<FavoritesPage> {
+  bool _isSorted = false; // Variable para rastrear si la lista está ordenada
+
+  void _sortFavorites(List<WordPair> favorites, MyAppState appState) {
+    setState(() {
+      if (_isSorted) {
+        // Si ya está ordenado, revertir la lista
+        favorites.sort((a, b) => a.asLowerCase.compareTo(b.asLowerCase));
+      } else {
+        // Si no está ordenado, ordenar alfabéticamente
+        favorites.sort((a, b) => a.asLowerCase.compareTo(b.asLowerCase));
+      }
+      _isSorted = !_isSorted; // Alternar entre ordenado y desordenado
+      appState.notifyListeners();
+    });
+  }
+
+
   @override
   Widget build(BuildContext context) {
     var appState = context.watch<MyAppState>();
@@ -246,19 +268,44 @@ class FavoritesPage extends StatelessWidget {
       );
     }
 
-    return ListView(
+    return Column(
       children: [
-        Padding(
-          padding: const EdgeInsets.all(20),
-          child: Text('You have '
-              '${appState.favorites.length} favorites:'),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            ElevatedButton(
+              onPressed: () {
+                _sortFavorites(appState.favorites, appState);
+                setState(() {}); // Actualiza el estado del widget
+              },
+              child: Icon(Icons.sort_by_alpha),
+            ),
+          ],
         ),
-        for (var pair in appState.favorites)
-          ListTile(
-            leading: Icon(Icons.favorite),
-            title: Text(pair.asLowerCase),
+        Expanded(
+          child: ListView(
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(20),
+                child: Text('You have ${appState.favorites.length} favorites:'),
+              ),
+              for (var pair in appState.favorites)
+                ListTile(
+                  leading: Icon(Icons.favorite),
+                  title: Text(pair.asLowerCase),
+                  trailing: IconButton(
+                    icon: Icon(Icons.delete),
+                    onPressed: () {
+                      appState.favorites.remove(pair);
+                      appState.notifyListeners();
+                    },
+                  ),
+                ),
+            ],
           ),
+        ),
       ],
     );
   }
 }
+
